@@ -146,9 +146,11 @@ m, σ = minimum(t), std(t)
 histogram(t, bins=500,
     xlim=(m - 0.01, m + σ),
     xlabel="milliseconds", ylabel="count", label="")
-## # 2. C with -ffast-math
+
+# # 2. C with -ffast-math
 #
-## If we allow C to re-arrange the floating point operations, then it'll vectorize with SIMD (single instruction, multiple data) instructions.
+# If we allow C to re-arrange the floating point operations, then it'll vectorize with SIMD (single instruction, multiple data) instructions.
+
 const Clib_fastmath = tempname()   # make a temporary file
 
 ## The same as above but with a -ffast-math flag added
@@ -322,4 +324,3 @@ d
 for (key, value) in sort(collect(d), by=last)
     println(rpad(key, 25, "."), lpad(round(value; digits=1), 6, "."))
 end
-
