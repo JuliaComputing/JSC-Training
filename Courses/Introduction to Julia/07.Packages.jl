@@ -27,31 +27,17 @@ using Example
 
 # In the source code of `Example.jl` at
 # https://github.com/JuliaLang/Example.jl/blob/master/src/Example.jl
-# we see the following function declared
+# we see the following:
 #
 # ```
+# export hello
+#
 # hello(who::String) = "Hello, $who"
 # ```
 #
 # Having loaded `Example`, we should now be able to call `hello`
 
 hello("it's me. I was wondering if after all these years you'd like to meet.")
-
-# Now let's play with the Colors package
-
-Pkg.add("Colors")
-
-#-
-
-using Colors
-
-# Let's create a palette of 100 different colors
-
-palette = distinguishable_colors(100)
-
-# and then we can create a randomly checkered matrix using the `rand` command
-
-rand(palette, 3, 3)
 
 # In the next notebook, we'll use a new package to plot datasets.
 
