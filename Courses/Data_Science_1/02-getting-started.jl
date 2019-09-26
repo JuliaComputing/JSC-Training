@@ -6,11 +6,14 @@ ENV["GKSwstype"] = "100" #src
 # >
 # > \- Caitlin Smallwood, Vice President of Science and Algorithms at Netflix
 
-println("Hello, Data Science World!")
 
 # # What does your data look like?
 #
-# Before you can solve complex problems with data, you should have a firm grasp on what your data looks like.  Are your variables continuous or categorical?  What do the distributions look like?  Are there missing observations?  Are variables correlated?  All of these questions arise in the data science workflow, so it's helpful to know the answers from the start of your analysis.
+# Before you can solve complex problems with data, you should have a firm grasp
+# on what your data looks like.  Are your variables continuous or categorical?
+# What do the distributions look like?  Are there missing observations?
+# Are variables correlated?  All of these questions arise in the data science
+# workflow, so it's helpful to know the answers from the start of your analysis.
 
 # Let's start with loading the [**`Statistics`**](https://docs.julialang.org/en/latest/stdlib/Statistics/) package, which provides basic statistical operations like means, variances, etc.
 
@@ -28,9 +31,9 @@ mean(x, dims=1)  # calculate over first dimension (column means)
 
 #-
 
-cor(x)  # correlation matrix  
+cor(x)  # correlation matrix
 
-# For a more realistic example, let's load some data from the **`RDatasets`** package, which has a large collection of datasets that get loaded as a `DataFrame`.  
+# For a more realistic example, let's load some data from the **`RDatasets`** package, which has a large collection of datasets that get loaded as a `DataFrame`.
 
 # The [`"iris"` dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set) is a collection of measurements for three different species of the iris flower: Iris Setosa, Iris Virginica, and Iris Versicolor (shown below).  The measurements consist of length and width of the petal and sepal (part underneath the flower).
 
@@ -40,7 +43,8 @@ using RDatasets
 
 iris = dataset("datasets", "iris")
 
-# DataFrames are discussed in another course module.  For now, we'll just use the fact that data vectors from the DataFrame can be selected with `mydf.mycol`:
+# DataFrames are a collection of columns — with potentially different element types
+# You can grab individual column vectors from the DataFrame with `mydf.mycol`:
 
 iris.SepalLength
 
@@ -95,7 +99,7 @@ y2 = sample(1:20, 20, replace=false)  # DOES NOT replace units after being selec
 
 countmap(y1)
 
-#- 
+#-
 
 countmap(y2)
 
@@ -106,7 +110,7 @@ countmap(y2)
 
 # # Parametric Distributions
 #
-# The [**`Distributions`**](https://github.com/JuliaStats/Distributions.jl) package provides an interface for working with probability distributions.  The full documentation is [here](https://juliastats.github.io/Distributions.jl/stable/).  
+# The [**`Distributions`**](https://github.com/JuliaStats/Distributions.jl) package provides an interface for working with probability distributions.  The full documentation is [here](https://juliastats.github.io/Distributions.jl/stable/).
 
 # Here we'll also load the **`StatsPlots`** package (more on this in the next course module) to visualize the probability distributions.
 
@@ -134,13 +138,14 @@ pdf(d, 0), cdf(d, 0), mean(d), var(d), quantile(d, .5), mode(d)
 
 d = Gamma(5, 1)
 
-pdf(d, 0), cdf(d, 0), mean(d), var(d), quantile(d, .5), mode(d)
+pdf(d, 4), cdf(d, 4), mean(d), var(d), quantile(d, .5), mode(d)
 
-# As an example, let's write a function that uses [Newton's Method](https://en.wikipedia.org/wiki/Newton%27s_method) that can find a given quantile for any continuous univariate distribution.  Newton's method attempts to find the root for a function $f$ by performing iterations of the form:
+# As an example, let's write a function to find a quantile of a distribution using
+# [Newton's Method](https://en.wikipedia.org/wiki/Newton%27s_method)
+# Newton's method attempts to find the root for a function $f$ iteratively.
 #
-# $$\theta^{(t)} = \theta^{(t-1)} - \frac{f(\theta^{(t-1)})}{f'(\theta^{(t-1)})}.$$
-#
-# For quantiles, we want to find the root of the function $F(\theta) - q$ where $F$ is the cumulative density function of the distribtuion and $q \in (0, 1)$.  Using **`Distributions`**, this looks something like
+# For quantiles, we want to find the root of the function $F(\theta) - q$ where
+# $F$ is the cumulative density function of the distribtuion and $q \in (0, 1)$.
 
 function myquantile(d::Distribution, q::Number)
     θ = mean(d)
@@ -153,11 +158,15 @@ end
 # Does our `myquantile` function work as expected?  Let's try out our function on several distributions.
 
 d = Normal()
-myquantile(d, .5), quantile(d, .5)
+myquantile(d, .4), quantile(d, .4)
 
 #-
 
 d = Gamma(4,3)
 myquantile(d, .7), quantile(d, .7)
 
-# The above example shows off the power of generic functions.  Instead of hard-coding the distribution (as would be necessary in R), we can write functions in terms of an arbitrary distribution (without extra effort).  This gives us a lot of flexibility for tasks such as writing [Gibbs Samplers](https://en.wikipedia.org/wiki/Gibbs_sampling) that can swap out distributions with ease.
+# The above example shows off the power of generic functions.
+# Instead of hard-coding the distribution, we can write functions in terms of an
+# arbitrary distribution (without extra effort).  This gives us a lot of flexibility
+# for tasks such as writing [Gibbs Samplers](https://en.wikipedia.org/wiki/Gibbs_sampling)
+# that can swap out distributions with ease.
