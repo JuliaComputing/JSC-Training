@@ -44,15 +44,17 @@ Alu.L
 
 Alu.U
 
+norm(Alu.L * Alu.U - Alu.P * A)
+
 # Julia can dispatch methods on factorization objects.
 #
 # For example, we can solve the linear system using either the original matrix or the factorization object.
 
-A\b
+@which A\b
 
 #-
 
-Alu\b
+@which Alu\b
 
 # Similarly, we can calculate the determinant of `A` using either `A` or the factorization object
 
@@ -92,6 +94,7 @@ AsymEig = eigen(Asym)
 
 AsymEig.values
 
+
 #-
 
 AsymEig.vectors
@@ -122,7 +125,9 @@ issymmetric(Asym_noisy)
 
 # Luckily we can declare structure explicitly with, for example, `Diagonal`, `Triangular`, `Symmetric`, `Hermitian`, `Tridiagonal` and `SymTridiagonal`.
 
-Asym_explicit = Symmetric(Asym_noisy);
+Asym_explicit = Symmetric(Asym_noisy)
+
+issymmetric(Asym_explicit)
 
 # Let's compare how long it takes Julia to compute the eigenvalues of `Asym`, `Asym_noisy`, and `Asym_explicit`
 
@@ -130,11 +135,11 @@ Asym_explicit = Symmetric(Asym_noisy);
 
 #-
 
-@time eigvals(Asym_noisy);
+@time eigvals(Asym_noisy)
 
 #-
 
-@time eigvals(Asym_explicit);
+@time eigvals(Asym_explicit)
 
 # In this example, using `Symmetric()` on `Asym_noisy` made our calculations about `5x` more efficient :)
 
@@ -144,8 +149,8 @@ Asym_explicit = Symmetric(Asym_noisy);
 # Using the `Tridiagonal` and `SymTridiagonal` types to store tridiagonal matrices makes it possible to work with potentially very large tridiagonal problems. The following problem would not be possible to solve on a laptop if the matrix had to be stored as a (dense) `Matrix` type.
 
 n = 1_000_000;
-A = SymTridiagonal(randn(n), randn(n-1));
-@time eigmax(A)
+A = SymTridiagonal(randn(n), randn(n-1))
+@time eigvals(A)
 
 # ## Generic linear algebra
 # The usual way of adding support for numerical linear algebra is by wrapping BLAS and LAPACK subroutines. For matrices with elements of `Float32`, `Float64`, `Complex{Float32}` or `Complex{Float64}` this is also what Julia does.
@@ -174,9 +179,9 @@ b = Arational*x
 Arational\b
 
 #-
-
+using LinearAlgebra
 lu(Arational)
-
+inv(Arational)
 # ### Exercises
 #
 # #### 11.1
@@ -196,12 +201,24 @@ lu(Arational)
 
 using LinearAlgebra
 
+ A =
+ [
+  140   97   74  168  131
+   97  106   89  131   36
+   74   89  152  144   71
+  168  131  144   54  142
+  131   36   71  142   36
+]
+
+eigvals(A)
 #-
 
 @assert A_eigv ==  [-128.49322764802145, -55.887784553056875, 42.7521672793189, 87.16111477514521, 542.4677301466143]
 
 # #### 11.2
 # Create a `Diagonal` matrix from the eigenvalues of `A`.
+
+E = Array(Diagonal(eigvals(A)))
 
 @assert A_diag ==  [-128.493    0.0      0.0      0.0       0.0;
     0.0    -55.8878   0.0      0.0       0.0;
@@ -215,4 +232,3 @@ using LinearAlgebra
   74   89  152    0   0;
  168  131  144   54   0;
  131   36   71  142  36]
-

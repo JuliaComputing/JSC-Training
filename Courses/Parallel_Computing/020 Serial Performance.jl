@@ -20,7 +20,7 @@ using JuliaAcademyData; activate("Parallel_Computing")
 #-
 
 # Use the [BenchmarkTools](https://github.com/JuliaCI/BenchmarkTools.jl) package:
-
+import Pkg; Pkg.add("BenchmarkTools")
 using BenchmarkTools
 
 """
@@ -50,7 +50,7 @@ using Profile
 Profile.clear()
 @profile for _ in 1:100000; findclosest(data, 0.5); end
 
-Profile.print(maxdepth=11)
+Profile.print(maxdepth=18)
 
 # ### Iterate!
 #
@@ -64,11 +64,11 @@ Profile.print(maxdepth=11)
 #
 # Let's come up with a new definition that can combine the two operations:
 
-function findclosest2(data, point)
-    bestval = first(data)
+function findclosest3(data, point)
+    bestval = first(data)::Float64
     bestdist = abs(bestval - point)
     for elt in data
-        dist = abs(elt - point)
+        dist = abs(elt::Float64 - point)
         if dist < bestdist
             bestval = elt
             bestdist = dist
@@ -84,6 +84,10 @@ findclosest2(data, 0.5) == findclosest(data, .5)
 
 @benchmark findclosest2($data, $0.5)
 
+typeof(newdata)
+@benchmark findclosest2($newdata, $0.5)
+@benchmark findclosest3($newdata, $0.5)
+
 # ## A quick word on macros
 #
 # Macros are those funny things starting with `@`. They can reinterpret what
@@ -92,7 +96,7 @@ findclosest2(data, 0.5) == findclosest(data, .5)
 # For example, the `@assert` macro simply takes an expression and throws an
 # exception if it returns `false`.
 
-@assert 2+2 == 4
+@assert 2+2 == 5
 
 # It does this by literally re-writing what you wrote. You can see it in action
 # with `@macroexpand`
@@ -102,6 +106,8 @@ findclosest2(data, 0.5) == findclosest(data, .5)
 # Each macro can define its own special syntax, and this is used extensively for
 # code introspection, serial performance improvements, and — perhaps most
 # importantly — parallelization perimitives!
+
+@macroexpand @time findclosest(data, point)
 
 #-
 
@@ -135,7 +141,7 @@ typeof(data)
 
 #-
 
-newdata = Real[data...]
+newdata = Any[data...]
 typeof(newdata)
 
 #-
@@ -162,6 +168,15 @@ typeof(newdata)
 # * Non-constant globals (they might change!)
 # * Functions that change what they return based on the _values_:
 
+newdata
+
+function f()
+    for elt in newdata
+
+    end
+end
+
+newdata = (1,2,3)
 #-
 
 # #### More on macros
@@ -186,11 +201,11 @@ x = 0.5 # non-constant global
 # Julia's reasoning about types is particularly important since it generates
 # specialized machine code specifically for the given arguments.
 
-@code_llvm 1 + 2
+@code_llvm 1.2 + 2.2
 
 # This applies just the same to any functions we write — even the more complicated ones:
 
-@code_llvm findclosest2(Float32[2.2,3.4,4.5],Float32(3.2))
+@code_llvm findclosest2(Float64[2.2,3.4,4.5],Float64(3.2))
 
 # This applies just the same to any functions we write — even the more complicated ones:
 
@@ -244,4 +259,3 @@ sortedview = @view data[idxs]
 # * Measure, measure, measure!
 # * Get familiar with the [Performance Tips](https://docs.julialang.org/en/v1/manual/performance-tips/)
 # * Don't be scared of `@code_typed`/`@code_warntype` and `@code_llvm`
-

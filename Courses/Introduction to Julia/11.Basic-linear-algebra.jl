@@ -6,7 +6,7 @@
 
 # First let's define a random matrix
 
-A = rand(1:4,3,3)
+A = rand(1:4,(3,3))
 
 # Define a vector of ones
 
@@ -85,4 +85,3 @@ v = [1,2,3]
 # Take the outer product of a vector v with itself and assign it to variable `cross_v`
 
 @assert cross_v == [0, 0, 0]
-
