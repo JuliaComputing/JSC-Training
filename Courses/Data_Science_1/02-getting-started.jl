@@ -1,5 +1,3 @@
-ENV["GKSwstype"] = "100" #src
-
 # # Getting Started with Data Science in Julia
 #
 # > [A]lways bite the bullet with regard to understanding the basics of the data first before you do anything else...

@@ -1,5 +1,3 @@
-ENV["GKSwstype"] = "100" #src
-
 # # Density Estimation
 #
 # Understanding the shape of your data is important for any data analysis.
