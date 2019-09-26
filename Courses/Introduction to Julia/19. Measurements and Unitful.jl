@@ -16,6 +16,14 @@ typeof(u"m")
 
 typeof(5u"m")
 
+# If you want, you can import specific unit names as identifiers.
+# Note that these are not exported by default, since that would pollute
+# your namespace with lots of short variable names.
+
+using Unitful: m
+
+5m
+
 # Why use string macros? Two big advantages:
 #
 # * There are _lots_ of supported units
@@ -43,6 +51,21 @@ uconvert(u"inch", 1.0u"c" * 1u"ns")
 # So now you can actually do arithmetic on mixed types:
 
 5u"lbf*s" + 3u"N*s"
+
+
+# Units combine easily e.g. with matrix operations
+
+using Unitful: s
+
+# Velocity matrix
+V = rand(3,3)*m./s
+# Time vector
+t = [1s, 2s, 3s]
+# Distance vector
+V*t
+
+# No overhead (where possible)
+@code_native 1m + 2m
 
 
 # Uncertainty tracking with measurements
