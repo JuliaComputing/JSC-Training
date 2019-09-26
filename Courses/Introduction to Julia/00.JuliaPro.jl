@@ -32,3 +32,8 @@ println
 # You can also execute code from within the interactive REPL, which appears
 # at the bottom of the window. Note that a number of special modes are available
 # at the REPL
+
+
+# ? - docs
+# ; - shell
+# ] - package management

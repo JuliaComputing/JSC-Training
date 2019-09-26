@@ -24,6 +24,7 @@
 #-
 
 100 / 10 # division
+100 / 7
 
 #-
 
@@ -40,6 +41,7 @@ sqrt(2) # square root
 #-
 
 √2 # Unicode to the rescue: \sqrt + TAB
+√42
 
 # Note that dividing two integers yields a floating point number. There are two additional operators that may be helpful here:
 
@@ -48,6 +50,7 @@ sqrt(2) # square root
 #-
 
 10 ÷ 6 # \div TAB or the `div` function
+div(10, 6)
 
 #-
 
@@ -99,7 +102,7 @@ x > 0 || error("x must be positive")
 
 # ### Comparisons
 
-1 == 1.0 # Equality
+1 == 1.0 == 1//1 # Equality
 
 #-
 
@@ -108,7 +111,7 @@ x > 0 || error("x must be positive")
 #-
 
 3 < π
-
+π
 #-
 
 1 <= 1
@@ -120,7 +123,7 @@ x > 0 || error("x must be positive")
 #-
 
 .1 + .2 ≈ .3 # \approx + TAB
-
+isapprox(.1 + .2, .3)
 # Comparisons "chain"
 #
 # Try inserting parentheses around one of these comparisons
@@ -134,6 +137,8 @@ x = 42
 
 # ### Higher precision
 
+2^63
+
 big(2)^1000
 
 big(pi)
@@ -144,10 +149,17 @@ big(0.1)
 
 # # Assignment
 #
-# Assignment in Julia is done with the single `=`. All it does is associates a name (on the left) to a value (on the right).
+# Assignment in Julia is done with the single `=`. All it does
+# is associates a name (on the left) to a value (on the right).
 
 x = 1 # Use the name `x` for the value `1`
+y = x
 
+x = 2
+y
+
+x = [1]
+x[1] = 2
 #-
 
 y = x # Use the name `y` for the value that `x` refers to
@@ -167,10 +179,14 @@ y # Is still the value 1
 x, y = y, x  # swap x and y
 x, y = y, x  # swap back
 
+
+x, y = f()
 #-
 
 ϵ = eps(1.0) # You can make your own unicode names
 
+x₀ = 1
+χ² = 2
 #-
 
 5ϵ # Juxtaposition is multiplication
@@ -178,15 +194,20 @@ x, y = y, x  # swap back
 #-
 
 # We make use of juxtaposition for complex numbers
-
+2*im
 (1 + 2im)^2
+
 
 # ## Updating operators
 #
 # All the infix arithmetic operators above can be used as "updating" operators in conjunction with an assignment:
 
+y = 0
 y += 1
 
+y = y + 1
+
+y += 1.5
 #-
 
 ## This is exactly the same as:
@@ -202,7 +223,7 @@ s1 = "I am a string."
 
 #-
 
-s2 = """I am also a string. """
+s2 = """I am also" a string. """
 
 #-
 
@@ -214,13 +235,13 @@ s2 = """I am also a string. """
 
 #-
 
-    println("""The other nice thing about triple-quoted
-               string literals is that they ignore leading
-               indentation, which is nice for long strings
-               in real code. Try changing these quotes!""")
+        println("""The other nice thing about triple-quoted
+                   string literals is that they ignore leading
+                   indentation, which is nice for long strings
+                   in real code. Try changing these quotes!""")
 
 # Strings are not written with single `'`s — that's used for a single character:
-
+'this is my string'
 first(s1)
 
 #-
@@ -245,9 +266,8 @@ println("I have $num_fingers fingers and $num_toes toes.")
 
 #-
 
- println("That is $(num_fingers + num_toes) digits in all!!")
+println("That is $(num_fingers + num_toes) digits in all!!")
 
-#-
 
-@assert days == 365
-@assert days_float == 365.0
+    println(1)
+    println(2)

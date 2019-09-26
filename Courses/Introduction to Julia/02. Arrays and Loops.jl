@@ -31,7 +31,7 @@ squares[1:3]
 
 #-
 
-squares[end]
+squares[2:end]
 
 #-
 
@@ -67,6 +67,7 @@ powers[:, 3]
 
 powers[7, :]
 
+powers[3:end, 2:end]
 #-
 
 typeof(powers)
@@ -81,11 +82,12 @@ nested_powers = [[1,2,3,4,5,6,7,8], squares, cubes]
 
 #-
 
-nested_powers[2]
+nested_powers[2][3]
 
 # Horizontal and vertical concatenation can be used together to as a simple syntax for matrix literals:
 
-[1 3 5; 2 4 6]
+[1 3 5
+ 2 4 6]
 
 # # Loops
 
@@ -101,7 +103,7 @@ nested_powers[2]
 #
 
 
-A = fill(0, (8, 3)) # Allocate an 8x3 matrix to store the values into
+A = [] # Allocate an 8x3 matrix to store the values into
 for pow in 1:3
     for value in 1:8
         A[value, pow] = value ^ pow
@@ -116,6 +118,7 @@ A == powers
 # ## Array Comprehensions
 
 squares = [value^2 for value in 1:8]
+cubes = [value^3 for value in 1:8]
 
 #-
 
@@ -129,7 +132,7 @@ powers = [value^pow for value in 1:8, pow in 1:3]
 #
 # Note that every time an array prints out, it is displaying its element type and dimensionality, for example `Array{Int64, 2}`. This describes what it can store — and thus what it can return upon indexing.
 
-typeof(powers)
+eltype(powers)
 
 #-
 
@@ -145,7 +148,7 @@ powers[1, 1] = -5.0 # This can be losslessly converted to an integer
 
 #-
 
-powers
+powers[1,1]
 
 # Arrays that have an exact and concrete element type are generally significantly faster, so Julia will try to find an amenable element type for you in its literal construction syntax:
 
