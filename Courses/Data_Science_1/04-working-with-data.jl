@@ -53,7 +53,7 @@ select(t, r"(Carat|Price)") # select the columns that match a regular expression
 
 # ## Selecting Rows
 #
-# Rows are selected based on some criteria with the `filter` function.  The first argument is a function which is then applied to whatever is selected by the `select` keyword argument.  Any valid selection via the `select` function (Integers, column names as Symbols, Regexes, etc.) can be used.  
+# Rows are selected based on some criteria with the `filter` function.  The first argument is a function which is then applied to whatever is selected by the `select` keyword argument.  Any valid selection via the `select` function (Integers, column names as Symbols, Regexes, etc.) can be used.
 #
 # Note that if you select a single column, the function is applied to each element of that column and a regular vector is returned.  If the selection selects multiple columns, then the function is applied to each row of the subsetted table (as a NamedTuple) and a table is returned.
 

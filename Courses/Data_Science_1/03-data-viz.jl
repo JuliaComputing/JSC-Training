@@ -3,7 +3,7 @@ ENV["GKSwstype"] = "100" #src
 # # Data Vizualization
 #
 # > The greatest value of a picture is when it forces us to notice what we never expected to see.
-# > 
+# >
 # > \- John Tukey
 #
 # Data visualization is used throughout the data science workflow.  It's used for everything from identifying simple relationships between variables to understanding how hyper-parameters affect model performance.  This course module will focus on exploratory data analysis using visualizations.
@@ -30,7 +30,7 @@ ENV["GKSwstype"] = "100" #src
 using Plots
 gr()  # set the backend as GR
 
-# The `plot` function has many different methods.  
+# The `plot` function has many different methods.
 
 p1 = plot(rand(10))             # y variable only
 p2 = plot(-5:4, rand(10))       # x and y variables
@@ -43,7 +43,7 @@ plot(p1, p2, p3, p4)            # join plots into subplots
 
 plot(rand(10), seriestype = :scatter, markersize = 5, markercolor = :black)
 
-# ## Series Types 
+# ## Series Types
 #
 # One of the most important keyword arguments to `plot` is `seriestype`, as it determines how the input data is turned into a plot.  For convenience, a `seriestype` also has a function of the same name:
 
@@ -63,13 +63,20 @@ plot(y, m = :circle)
 
 # ## Magic Arguments
 #
-# *Magic arguments* is one of **`Plots`**' unique features.  Certain keyword arguments act like "magic" where by providing a tuple, Plots intelligently maps the items to the corresponding plot element.  For example, by providing `marker = (5, .3, :auto)`, the marker size is set as 5, the marker alpha as .3, and the marker shape is automatically determined.  Note that we can also use the alias `m` rather than `marker`:
+# *Magic arguments* is one of **`Plots`**' unique features.  Certain keyword
+# arguments act like "magic" where by providing a tuple, Plots intelligently
+# maps the items to the corresponding plot element.  For example, by providing
+# `marker = (5, .3, :auto)`, the marker size is set as 5, the marker alpha as .3,
+# and the marker shape is automatically determined.  Note that we can also use
+# the alias `m` rather than `marker`:
 
-scatter(randn(10, 3), m = (5, .3, :auto))
+scatter(randn(10, 3), m = (5, .8, :auto))
 
 # ## Plotting from datasets
 #
-# Let's now use what we've learned about **`Plots`** to explore the `mtcars` dataset, extracted from a 1974 issue of of *Motor Trend* Magazine.  The variables included are:
+# Let's now use what we've learned about **`Plots`** to explore the `mtcars`
+# dataset, extracted from a 1974 issue of of *Motor Trend* Magazine.  The
+# variables included are:
 #
 # - `Model`: Make and model of the car
 # - `MPG`: Miles per gallon
@@ -84,15 +91,15 @@ scatter(randn(10, 3), m = (5, .3, :auto))
 # - `Gear`: Number of forward gears
 # - `Carb`: Number of carburetors
 
-using RDatasets
+import RDatasets
 
-mtcars = dataset("datasets", "mtcars")
+mtcars = RDatasets.dataset("datasets", "mtcars")
 
 # First, let's `describe` the data.
 
 describe(mtcars)
 
-# What's the relationship between miles per gallon and horsepower?  
+# What's the relationship between miles per gallon and horsepower?
 
 scatter(mtcars.MPG, mtcars.HP, xlab="MPG", ylab = "HP")
 

@@ -39,9 +39,9 @@ cor(x)  # correlation matrix
 
 # <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Iris_versicolor_3.jpg" width=400>
 
-using RDatasets
+import RDatasets
 
-iris = dataset("datasets", "iris")
+iris = RDatasets.dataset("datasets", "iris")
 
 # DataFrames are a collection of columns — with potentially different element types
 # You can grab individual column vectors from the DataFrame with `mydf.mycol`:
