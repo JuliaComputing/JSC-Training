@@ -1,5 +1,4 @@
-import Pkg; Pkg.add(Pkg.PackageSpec(url="https://github.com/JuliaComputing/JuliaAcademyData.jl"))
-using JuliaAcademyData; activate("Parallel_Computing")
+import Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
 
 # # SIMD: The parallelism that can (sometimes) happen automatically
 #
@@ -233,4 +232,3 @@ unsafe_diff!(Bcopy, Bcopy)
 #     * Smaller datatypes can improve this further; use `Float32` instead of `Float64`
 #       if possible, `Int32` instead of `Int64`, etc.
 #     * When buying a new processor, look for [AVX-512](https://en.wikichip.org/wiki/x86/avx-512) support
-
