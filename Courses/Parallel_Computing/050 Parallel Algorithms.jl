@@ -1,5 +1,4 @@
-import Pkg; Pkg.add(Pkg.PackageSpec(url="https://github.com/JuliaComputing/JuliaAcademyData.jl"))
-using JuliaAcademyData; activate("Parallel_Computing")
+import Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
 
 # # Parallel Algorithms: Thinking in Parallel
 #
@@ -21,32 +20,14 @@ using Compose, Gadfly
 #
 # It is considered a basic parallel computing primitive.
 
-reduce(+, 1:8), sum(1:8)  # triangular numbers
+reduce(+, 1:8) == sum(1:8)  # triangular numbers
 
 #-
 
-reduce(*, 1:8), prod(1:8) # factorials
+reduce(*, 1:8) == prod(1:8) # factorials
 
-#-
-
-boring(a,b)=a
-@show reduce(boring, 1:8)
-boring2(a,b)=b
-@show reduce(boring2, 1:8)
 
 # You can also use reduce to compute Fibonacci numbers using their recurrences.
-#
-# $$\begin{pmatrix} f_2 \\f_1 \end{pmatrix} = \begin{pmatrix} f_1 + f_0 \\ f_1 \end{pmatrix}
-# = \begin{pmatrix} 1 & 1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} f_1 \\ f_0 \end{pmatrix} $$
-#
-# $$\begin{pmatrix} f_{n+1} \\ f_n \end{pmatrix} = \dots
-# = \begin{pmatrix} 1 & 1 \\ 1 & 0 \end{pmatrix}^n \begin{pmatrix} f_1 \\ f_0 \end{pmatrix} $$
-#
-# From this, you can show that
-#
-# $$\begin{pmatrix} 1 & 1 \\ 1 & 0 \end{pmatrix}^n  = \begin{pmatrix} f_{n+1} & f_n \\ f_n & f_{n-1} \end{pmatrix} $$
-#
-# (this applies reduce to the same argument over and over again -- there are of course other ways)
 
 M=[1 1; 1 0]
 reduce(*,fill(M,3))
@@ -54,62 +35,13 @@ prod(fill(M,3))
 
 #-
 
-n= 50 # Try manipulating n to pick different values (try between 0-100)
-prod(fill(big.(M),n))
+n= 40 # Try changing n to pick different values (try between 0-100)
+@show prod(fill(big.(M),n))
 
-#-
-
-fib(j)=reduce(*, fill(M,j))
-fib.([4,7])
-
-# You can solve recurrences of any complexity using `reduce`. For example, `reduce` can compute a Hadamard matrix from its definition in terms of its submatrices:
+# # `prefix` or `scan`
 #
-# $$H_2 = \begin{pmatrix} H_1 & H_1 \\ H_1 & -H_1 \end{pmatrix} = \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix} \otimes H_1$$
-#
-# and so on.
-#
-# (Note: this is just using reduce to compute a matrix power.
-# One can think of alternative ways for sure.)
-
-## If A is m x n
-## If B is p x q
-## then kron(A,B) is mp x nq and has all the elements of A times all of the elements of B
-
-#-
-
-A=[1 2;3 4]
-B=[10 100; 1 -10]
-⊗(A,B)=kron(A,B)
-
-M=[ 1 1;1 -1]
-H=⊗(⊗(⊗(M,M),M),M)
-
-#-
-
-H'H
-
-#-
-
-Hadamard(n)=reduce(⊗, fill(M,n))
-H=Hadamard(4)
-
-#-
-
-using LinearAlgebra
-cumsum(1:8)  # It is useful to know that cumsum is a linear operator
-## You can use power method! Below is the underlying matrix
-A=tril(ones(Int,8,8))
-
-#-
-
-[A*(1:8),cumsum(1:8)]
-
-# # `prefix`
-
-#-
-
 # Having discussed `reduce`, we are now ready for the idea behind prefix sum.
-# Prefix or scan is long considered an important parallel
+# Prefix or scan or accumulate is long considered an important parallel
 # primitive as well.
 #
 # Suppose you wanted to compute the partial sums of a vector, i.e. given
@@ -134,7 +66,7 @@ A=tril(ones(Int,8,8))
 # which appears to be an intrinsically serial process. As written with a `+`
 # operator, this is `cumsum` — but note that it can generalize to any operation.
 
-function prefix_serial!(y, ⊕)
+function prefix_serial!(⊕, y)
     for i=2:length(y)
         y[i] = y[i-1] ⊕ y[i]
     end
@@ -143,24 +75,21 @@ end
 
 #-
 
-prefix_serial!([1:8;],+)
+@show prefix_serial!(+, [1:8;])
+@show cumsum(1:8)
 
 #-
 
-cumsum(1:8)
+@show prefix_serial!(*, [1:8;])
+@show cumprod(1:8)
 
 #-
-
-prefix_serial!([1:8;], *)
-
-#-
-
-cumprod(1:8)
+@show accumulate(*, [1:8;])
 
 # However, it turns out that because these operations are associative, we can regroup the _order_ of how these sums or products are carried out. (This of course extends to other associative operations, too.) Another ordering of 8 associative operations is provided by `prefix8!`:
 
 ## Magic :)
-function prefix8!(y, ⊕)
+function prefix8!(⊕, y)
     length(y)==8 || error("length 8 only")
     for i in (2,4,6,8); y[i] = y[i-1] ⊕ y[i]; end
     for i in (  4,  8); y[i] = y[i-2] ⊕ y[i]; end
@@ -172,12 +101,12 @@ end
 
 #-
 
-prefix8!([1:8;], +) == cumsum(1:8)
+prefix8!(+, [1:8;]) == cumsum(1:8)
 
 # In fact, this can generalize beyond just length-8 arrays:
 
 ## More magic
-function prefix!(y, ⊕)
+function prefix!(⊕, y)
     l=length(y)
     k=ceil(Int, log2(l))
     @inbounds for j=1:k, i=2^j:2^j:min(l, 2^k)              #"reduce"
@@ -192,7 +121,7 @@ end
 # -
 
 A = rand(0:9, 123)
-prefix!(copy(A), *) == cumprod(A)
+prefix!(*, copy(A)) == cumprod(A)
 
 # ## What is this magic?
 
@@ -254,7 +183,7 @@ M.history
 
 # So now we can trace the access pattern when calling `prefix8`!
 
-A=prefix8!(AccessArray(rand(8)),+)
+A=prefix8!(+, AccessArray(rand(8)))
 
 #-
 
@@ -316,30 +245,21 @@ end
 
 #-
 
-render(prefix!(AccessArray(zeros(8)), +))
+render(prefix!(+, AccessArray(zeros(8))))
 
 # Now we can see that `prefix!` rearranges the operations to form two spanning trees:
+# Try changing the number of elements!
 
-render(prefix!(AccessArray(zeros(120)),+))
+render(prefix!(+, AccessArray(zeros(16))))
 
 # as contrasted with the serial code:
 
-render(prefix_serial!(AccessArray(zeros(8)),+))
-
-#-
-
-npp=90 # Try manipulating npp to choose different values between 1 and 180
-render(prefix!(AccessArray(zeros(npp)),+))
-
-#-
-
-npp=90 # And manipulate it again, this time with the serial algorithm
-render(prefix_serial!(AccessArray(zeros(npp)),+))
+render(prefix_serial!(+, AccessArray(zeros(8))))
 
 # # Now exploit the parallelism in the _algorithm_ to use a parallel _implementation_
 
 using .Threads
-function prefix_threads!(y, ⊕)
+function prefix_threads!(⊕, y)
     l=length(y)
     k=ceil(Int, log2(l))
     for j=1:k
@@ -358,11 +278,11 @@ end
 A = rand(500_000);
 
 using BenchmarkTools
-@btime prefix_serial!($(copy(A)), +);
-@btime prefix!($(copy(A)), +);
-@btime prefix_threads!($(copy(A)), +);
+@btime prefix_serial!(+, $(copy(A)));
+@btime prefix!(+, $(copy(A)));
+@btime prefix_threads!(+, $(copy(A)));
 
-prefix_threads!(copy(A), +) == prefix!(copy(A), +) ≈ cumsum(A)
+prefix_threads!(+, copy(A)) == prefix!(+, copy(A)) ≈ cumsum(A)
 
 # # Thinking in parallel
 #
@@ -375,4 +295,3 @@ prefix_threads!(copy(A), +) == prefix!(copy(A), +) ≈ cumsum(A)
 # just fall out naturally.
 #
 # Finally, note that there can be clever ways to visualize algorithms as sanity checks.
-

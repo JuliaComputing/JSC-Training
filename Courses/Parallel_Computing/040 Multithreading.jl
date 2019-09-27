@@ -1,5 +1,4 @@
-import Pkg; Pkg.add(Pkg.PackageSpec(url="https://github.com/JuliaComputing/JuliaAcademyData.jl"))
-using JuliaAcademyData; activate("Parallel_Computing")
+import Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
 
 # # Multithreading
 #
@@ -14,8 +13,6 @@ using JuliaAcademyData; activate("Parallel_Computing")
 versioninfo(verbose = true)
 
 #-
-
-#nb ;cat /proc/cpuinfo # on Linux machines
 
 using Hwloc
 Hwloc.num_physical_cores()
@@ -32,27 +29,20 @@ Hwloc.num_physical_cores()
 # already threaded:
 
 using BenchmarkTools
-A = rand(2000, 2000);
-B = rand(2000, 2000);
-@btime $A*$B;
+A = rand(1000, 1000);
+B = rand(1000, 1000);
+@benchmark $A*$B
 
 # This is — by default — already using all your CPU cores! You can see the effect
 # by changing the number of threads (which BLAS supports doing dynamically):
 
 using LinearAlgebra
 BLAS.set_num_threads(1)
-@btime $A*$B
+@benchmark $A*$B
 BLAS.set_num_threads(4)
-@btime $A*$B
+@benchmark $A*$B
 
 # ## What does it look like to implement your _own_ threaded algorithm?
-
-#-
-
-# Multithreading support is marked as "experimental" so far, but has been
-# significantly improved in version 1.3.
-# In the future, the core ideas will be the same, but it should become
-# easier to use efficiently.
 
 using .Threads
 
@@ -66,29 +56,28 @@ nthreads()
 # JULIA_NUM_THREADS=4 julia
 # ```
 
-#-
+run(`env JULIA_NUM_THREADS=4 julia -E 'using .Threads; nthreads()'`)
 
-#nb # On JuliaBox, this is a challenge — we don't have access to the launching process!
-
-#nb ;env JULIA_NUM_THREADS=4 julia -E 'using .Threads; nthreads()'
-
-#-
+# The other way to do it is in JuliaPro itself:
+#
+# * Go to the Julia Menu -> Settings -> Number of Threads
+# * By default it'll choose a "good" number for you
 
 threadid()
 
 # So we're currently on thread 1. Of course a loop like this will
 # just set the first element to one a number of times:
 
-A = Array{Union{Int,Missing}}(missing, nthreads())
+A = zeros(Int, nthreads())
 for i in 1:nthreads()
-    A[threadid()] = threadid()
+    A[i] = threadid()
 end
 A
 
-# But if we prefix it with `@threads` then the loop body runs on all threads!
+# But if we prefix it with `@threads` then the loop body is divided between threads!
 
 @threads for i in 1:nthreads()
-    A[threadid()] = threadid()
+    A[i] = threadid()
 end
 A
 
@@ -220,10 +209,6 @@ end
 serialpi(1)
 @time serialpi(100_000_000)
 
-#-
-
-using .Threads
-nthreads()
 
 # Let's use the techniques we learned above to make a fast threaded implementation:
 
@@ -235,7 +220,7 @@ function threadedpi(n)
     end
     return 4 * sum(inside) / n
 end
-threadedpi(100_000_000)
+threadedpi(240)
 @time threadedpi(100_000_000)
 
 # Ok, now why didn't that work?  It's slow! Let's look at the sequence of random
@@ -263,13 +248,12 @@ Rthreaded
 
 Set(Rserial) == Set(Rthreaded)
 
-#-
-
-indexin(Rserial, Rthreaded)
-
-# Aha, `rand()` isn't threadsafe! It's mutating (and reading) some global each
+# Aha, `rand()` isn't (currently) threadsafe! It's mutating (and reading) some global each
 # time to figure out what to get next. This leads to slowdowns — and worse — it
 # skews the generated distribution of random numbers since some are repeated!!
+#
+# Note: on the upcoming Julia 1.3 it is now threadsafe by default! Here's how
+# we can emulate it on prior versions:
 
 const ThreadRNG = Vector{Random.MersenneTwister}(undef, nthreads())
 @threads for i in 1:nthreads()
@@ -290,7 +274,7 @@ function threadedpi2(n)
     end
     return 4 * sum(inside) / n
 end
-threadedpi2(10)
+threadedpi2(240)
 @time threadedpi2(100_000_000)
 
 # As an aside, be careful about initializing many `MersenneTwister`s with
@@ -311,7 +295,7 @@ function serial_matmul(As)
     end
     first_idxs
 end
-serial_matmul(Ms);
+serial_matmul(Ms[1:1]);
 @time serial_matmul(Ms);
 
 #-
@@ -325,7 +309,7 @@ function threaded_matmul(As)
     end
     first_idxs
 end
-threaded_matmul(Ms)
+threaded_matmul(Ms[1:1])
 @time threaded_matmul(Ms);
 
 #-
@@ -361,30 +345,28 @@ BLAS.set_num_threads(1)
 # ![Cache coherency](https://raw.githubusercontent.com/JuliaComputing/JuliaAcademyData.jl/master/courses/Parallel_Computing/images/false-sharing.gif)
 #
 # Unlike "true" sharing — which we saw above — false sharing will still return the correct answer! But it does so at the cost of performance. The cores recognize they don't have exclusive access to the cache line and so upon modification they alert all other cores to invalidate and re-fetch the data.
-#
-# ```julia
-# function threaded_sum4(A)
-#     R = zeros(eltype(A), nthreads())
-#     @threads for i in eachindex(A)
-#         @inbounds R[threadid()] += A[i]
-#     end
-#     r = zero(eltype(A))
-#     # sum the partial results from each thread
-#     for i in eachindex(R)
-#         @inbounds r += R[i]
-#     end
-#     return r
-# end
-# ```
+
+function test(spacing)
+    a = zeros(Threads.nthreads()*spacing)
+    b = rand(1000000)
+    calls = zeros(Threads.nthreads()*spacing)
+    @threads for i in eachindex(b)
+        a[Threads.threadid()*spacing] += b[i]
+        calls[Threads.threadid()*spacing] += 1
+    end
+    a, calls
+end
+@benchmark test(1);
+@benchmark test(8);
 
 #-
 
-# ## New in 1.3: parallel @spawn
-
-# Julia 1.3 adds Threads.@spawn, which runs a "task" in parallel
-# on any available thread, using a work queue.
-# This addresses the problem of having library functions implemented with
-# `@threads` and then having callers call them with `@threads`.
+# ## Further improvements coming here!
+#
+# PARTR — the threading improvement I discussed at the beginning aims to address
+# this problem of having library functions implemented with `@threads` and then
+# having callers call them with `@threads`. Uses a state-of-the-art work queue
+# mechanism to make sure that all threads stay busy.
 
 #-
 
@@ -394,7 +376,6 @@ BLAS.set_num_threads(1)
 # * Well, not so fast
 #     * Be aware of your hardware to set `JULIA_NUM_THREADS` appropiately
 #     * Beware shared state (for both performance and correctness)
-#     * Beware global state (even if it's not obvious)
-#     * Beware false sharing (if Julia/LLVM don't handle it for you)
+#     * Beware global state (but the built-in global state is improving!)
+#     * Beware false sharing (especially with multiple processor chips)
 # * We need to think carefully about how to design parallel algorithms!
-

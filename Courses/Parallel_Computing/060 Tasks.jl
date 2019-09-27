@@ -1,5 +1,4 @@
-import Pkg; Pkg.add(Pkg.PackageSpec(url="https://github.com/JuliaComputing/JuliaAcademyData.jl"))
-using JuliaAcademyData; activate("Parallel_Computing")
+import Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
 
 # # A brief introduction to Tasks
 #
@@ -65,26 +64,22 @@ t = @async process_folder("results")
 #-
 
 run(`touch results/1.txt`)
-sleep(.1)
 readdir("processed-results")
 
 #-
 
 run(`touch results/2.txt`)
-sleep(.1)
 readdir("processed-results")
 
 #-
 
 isdone = true
 run(`touch results/3.txt`)
-sleep(.1)
 readdir("processed-results")
 
 #-
 
 run(`touch results/4.txt`)
-sleep(.1)
 readdir("processed-results")
 
 #-
@@ -138,17 +133,11 @@ methods(sleep)
 
 # # Fetching values from tasks
 
-#-
-
 # You can even fetch values from tasks
 
 t = @async (sleep(5); rand())
 
-#-
-
 wait(t)
-
-#-
 
 fetch(t)
 
@@ -162,4 +151,3 @@ fetch(t)
 # * `@sync` waits for them to all complete
 # * We can reason about something that runs asynchronously and may return a value
 #   at some point in the future with `fetch`. Or we can just `wait` for it.
-

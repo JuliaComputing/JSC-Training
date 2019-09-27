@@ -1,5 +1,4 @@
-import Pkg; Pkg.add(Pkg.PackageSpec(url="https://github.com/JuliaComputing/JuliaAcademyData.jl"))
-using JuliaAcademyData; activate("Parallel_Computing")
+import Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
 
 # # GPUs
 #
@@ -41,8 +40,7 @@ using JuliaAcademyData; activate("Parallel_Computing")
 
 # You can inspect the installed GPUs with nvidia-smi:
 
-#nb ;nvidia-smi
-#jl run(`nvidia-smi`)
+run(`nvidia-smi`)
 
 # ## Example
 #
@@ -76,11 +74,9 @@ m = Chain(
 
 loss(x, y) = crossentropy(m(x), y)
 accuracy(x, y) = mean(onecold(m(x)) .== onecold(y))
-## opt = ADAM() # <-- Move Flux.params(m) here!
-## @time Flux.train!(loss, Flux.params(m), train[1:10], opt, cb = () -> @show(accuracy(tX, tY)))
-opt = ADAM(Flux.params(m), ) # <-- Move Flux.params(m) here!
+opt = ADAM()
 Flux.train!(loss, train[1:1], opt, cb = () -> @show(accuracy(tX, tY)))
-@time Flux.train!(loss, train[1:10], opt, cb = () -> @show(accuracy(tX, tY)))
+@time Flux.train!(loss, Flux.params(m), train[1:10], opt, cb = () -> @show(accuracy(tX, tY)))
 
 # Now let's re-do it on a GPU. "All" it takes is moving the data there with `gpu`!
 
@@ -91,9 +87,9 @@ gputX = gpu(tX)
 gputY = gpu(tY)
 gpuloss(x, y) = crossentropy(gpum(x), y)
 gpuaccuracy(x, y) = mean(onecold(gpum(x)) .== onecold(y))
-gpuopt = ADAM(Flux.params(gpum), )
-Flux.train!(gpuloss, gpu.(train[1:1]), gpuopt, cb = () -> @show(gpuaccuracy(gputX, gputY)))
-@time Flux.train!(gpuloss, gputrain, gpuopt, cb = () -> @show(gpuaccuracy(gputX, gputY)))
+gpuopt = ADAM()
+Flux.train!(gpuloss, Flux.params(gpum), gpu.(train[1:1]), gpuopt, cb = () -> @show(gpuaccuracy(gputX, gputY)))
+@time Flux.train!(gpuloss, Flux.params(gpum), gputrain, gpuopt, cb = () -> @show(gpuaccuracy(gputX, gputY)))
 
 # ## Defining your own GPU kernels
 #
@@ -136,4 +132,3 @@ using BenchmarkTools
 # can use [CUDAnative.jl](https://github.com/JuliaGPU/CUDAnative.jl) to manually specify exactly how everything works,
 # but be forewarned, it's not for the [faint at heart](https://github.com/JuliaGPU/CUDAnative.jl/blob/master/examples/reduce/reduce.jl)! (If you've done CUDA
 # programming in C or C++, it's very similar.)
-

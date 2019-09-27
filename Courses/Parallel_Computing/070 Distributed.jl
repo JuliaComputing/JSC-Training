@@ -1,5 +1,4 @@
-import Pkg; Pkg.add(Pkg.PackageSpec(url="https://github.com/JuliaComputing/JuliaAcademyData.jl"))
-using JuliaAcademyData; activate("Parallel_Computing")
+import Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
 
 # # Distributed (or multi-core or multi-process) parallelism
 #
@@ -13,10 +12,12 @@ using JuliaAcademyData; activate("Parallel_Computing")
 using Distributed
 nprocs()
 
+import Hwloc
+n = Hwloc.num_physical_cores()
+
 #-
 
-addprocs(4)
-@sync @everywhere workers() include("/opt/julia-1.0/etc/julia/startup.jl") # Needed just for JuliaBox
+addprocs(n, exeflags=`--project=$@__DIR__`)
 nprocs()
 
 #-
@@ -38,14 +39,14 @@ fetch(r)
 
 # So we can repeat the same examples from tasks:
 
-@time for i in 2:nprocs() # proc 1 is the controlling node
-    @spawnat i sleep(1)
+@time for w in workers()
+    @spawnat w sleep(1)
 end
 
 #-
 
-@time @sync for i in 2:nprocs()
-    @spawnat i sleep(1)
+@time @sync for w in workers()
+    @spawnat w sleep(1)
 end
 
 # Except unlike tasks, we're executing the code on a separate process — which
@@ -87,7 +88,7 @@ b = partial_pi(1000:9999)
 
 # So now we can distribute this computation across our many workers!
 
-r = 0:10_000_000_000
+r = 0:1_000_000_000
 futures = Array{Future}(undef, nworkers())
 @time begin
     for (i, id) in enumerate(workers())
@@ -178,8 +179,6 @@ p - pi
 hello() = "hello world"
 r = @spawnat 2 hello()
 
-#-
-
 fetch(r)
 
 # Note that this applies to packages, too!
@@ -235,7 +234,7 @@ fetch(@spawnat 2 mean(rand(100_000)))
 # ```
 
 using SharedArrays
-function prefix!(y::SharedArray, ⊕)
+function prefix!(⊕, y::SharedArray)
     l=length(y)
     k=ceil(Int, log2(l))
     for j=1:k
@@ -255,8 +254,8 @@ A = SharedArray(data);
 
 #-
 
-prefix!(SharedArray(data), +) # compile
-@time prefix!(A, +);
+prefix!(+, copy(A)) # compile
+@time prefix!(+, A);
 
 #-
 
@@ -264,7 +263,7 @@ A ≈ cumsum(data)
 
 # What went wrong?
 
-function prefix!(y::SharedArray, ⊕)
+function prefix!(⊕, y::SharedArray)
     l=length(y)
     k=ceil(Int, log2(l))
     for j=1:k
@@ -280,7 +279,7 @@ function prefix!(y::SharedArray, ⊕)
     y
 end
 A = SharedArray(data)
-@time prefix!(A, +)
+@time prefix!(+, A)
 
 #-
 
@@ -293,6 +292,7 @@ A ≈ cumsum(data)
 # headaches.
 
 @everywhere using Distributed
+using DistributedArrays
 @everywhere using DistributedArrays
 A = DArray(I->fill(myid(), length.(I)), (24, 24))
 
@@ -309,6 +309,7 @@ end
 # current data! While we've only talked about master-worker communcation so far,
 # workers can communicate directly amongst themselves, too (by default).
 
+using BenchmarkTools
 @everywhere using BenchmarkTools
 fetch(@spawnat 2 @benchmark $A[1,1])
 
@@ -363,7 +364,7 @@ end
 #-
 
 A = DArray(I->rand(Bool, length.(I)), (20,20))
-using Colors
+@everywhere using Colors
 Gray.(A)
 
 #-
@@ -373,6 +374,8 @@ B = copy(A)
 #-
 
 B = Gray.(life_step(B))
+B
+#-
 
 # ## Clusters and more ways to distribute
 #
@@ -402,4 +405,3 @@ B = Gray.(life_step(B))
 #     * `pmap` is great for very expensive inner loops that return a value
 #     * `SharedArray`s can be an easier drop-in replacement for threading-like behaviors (on a single machine)
 #     * `DistributedArray`s can turn the problem on its head and let the data do the work splitting!
-
