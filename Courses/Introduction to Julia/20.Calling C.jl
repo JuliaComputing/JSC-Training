@@ -20,7 +20,7 @@ ccall((:hello, "./libhello.so"), Cvoid, (Cstring,), "NASA")
 
 ccall((:sqr, "./libhello.so"), Cdouble, (Cdouble,), sqrt(2))
 
-# # Callbacks from C to Julia
+# ## Callbacks from C to Julia
 
 # Naturally, we will call qsort, the only higher-order function in C :)
 
@@ -91,11 +91,16 @@ B
 # Can C sort with units??
 
 using Unitful
-using Unitful: s
 
-t = rand(10)*s
+t = rand(10)*u"s"
 
 qsort!(t)
 
 # Of course it can!
 t
+
+# ## Embedding julia in C/Fortran
+# https://docs.julialang.org/en/latest/manual/embedding/
+
+# ## C++ interop
+# https://github.com/JuliaInterop/Cxx.jl
